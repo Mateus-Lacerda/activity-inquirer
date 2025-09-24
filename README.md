@@ -36,9 +36,9 @@ Uma aplicação em Rust para rastrear atividades pessoais com interface gráfica
 
 1. **Baixe a versão mais recente** dos [releases](https://github.com/user/activity-inquirer/releases/latest)
 2. **Escolha o arquivo para seu sistema**:
-   - 🐧 Linux: `acv-inq-linux-x86_64.tar.gz`
-   - 🍎 macOS: `acv-inq-macos-x86_64.tar.gz` (Intel) ou `acv-inq-macos-aarch64.tar.gz` (M1/M2)
-   - 🪟 Windows: `acv-inq-windows-x86_64.zip`
+   - 🐧 Linux: `acv-inq-linux-amd64.tar.gz` (glibc 2.31+)
+   - 🍎 macOS: `acv-inq-darwin-amd64.tar.gz` (Intel) ou `acv-inq-darwin-arm64.tar.gz` (M1/M2)
+   - 🪟 Windows: `acv-inq-windows-amd64.zip`
 3. **Extraia e execute o instalador**:
    ```bash
    # Linux/macOS
@@ -49,6 +49,12 @@ Uma aplicação em Rust para rastrear atividades pessoais com interface gráfica
    # Windows
    # Extraia o ZIP e execute install.bat
    ```
+
+   **📦 Cada release inclui:**
+   - Binário executável
+   - Scripts de instalação
+   - Logo em PNG e SVG
+   - Documentação (README e LICENSE)
 
 ### 🔧 Instalação via Script (Compilação Local)
 ```bash
@@ -194,10 +200,14 @@ O projeto usa GitHub Actions para automação de releases:
 
 ### **Builds Automáticos**
 Cada release gera binários para:
-- Linux x86_64 (glibc e musl)
+- Linux x86_64 (glibc 2.31+)
 - macOS x86_64 (Intel)
 - macOS aarch64 (Apple Silicon)
 - Windows x86_64
+
+### **Compatibilidade Linux**
+- **Compatível com**: Ubuntu 20.04+, Debian 11+, CentOS 8+, RHEL 8+
+- **Requer**: glibc 2.31 ou superior
 
 ### **Funcionalidades do Sistema**
 - **Builds paralelos** em runners nativos

@@ -56,22 +56,29 @@ fn run_inquiry_mode() -> Result<()> {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([400.0, 300.0])
             .with_title("Activity Inquirer")
-            .with_resizable(false),
+            .with_resizable(false)
+            .with_close_button(true),
         // .with_always_on_top(),
         ..Default::default()
     };
 
-    eframe::run_native(
+    let result = eframe::run_native(
         "Activity Inquirer",
         options,
         Box::new(|cc| {
             ui::theme::apply_theme(&cc.egui_ctx, models::Theme::default());
             Box::new(app)
         }),
-    )
-    .map_err(|e| anyhow::anyhow!("Erro ao executar aplicação: {e}"))?;
+    );
 
-    Ok(())
+    // Garantir que a aplicação sempre retorne, mesmo em caso de erro
+    match result {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            eprintln!("Aviso: Erro ao fechar aplicação: {e}");
+            Ok(()) // Não falhar o daemon por problemas de fechamento
+        }
+    }
 }
 
 fn run_viewer_mode() -> Result<()> {

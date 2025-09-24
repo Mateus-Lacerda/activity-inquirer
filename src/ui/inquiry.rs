@@ -13,6 +13,8 @@ pub struct InquiryApp {
     message: Option<String>,
     should_close: bool,
     fonts_configured: bool,
+    close_requested: bool,
+    close_timer: Option<std::time::Instant>,
 }
 
 impl InquiryApp {
@@ -27,6 +29,8 @@ impl InquiryApp {
             message: None,
             should_close: false,
             fonts_configured: false,
+            close_requested: false,
+            close_timer: None,
         };
 
         app.setup_question()?;
@@ -160,6 +164,8 @@ impl eframe::App for InquiryApp {
 
                 if ui.add(Button::new("Cancelar")).clicked() {
                     self.should_close = true;
+                    self.close_requested = true;
+                    self.close_timer = Some(std::time::Instant::now());
                 }
             });
         });
@@ -167,6 +173,19 @@ impl eframe::App for InquiryApp {
         // Fechar a aplicação se necessário
         if self.should_close {
             ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+
+            // Se o fechamento foi solicitado, forçar repaint para garantir que o comando seja processado
+            if self.close_requested {
+                ctx.request_repaint();
+
+                // Se passou mais de 2 segundos tentando fechar, forçar saída
+                if let Some(timer) = self.close_timer {
+                    if timer.elapsed().as_secs() > 2 {
+                        eprintln!("⚠️  Forçando fechamento da aplicação após timeout");
+                        std::process::exit(0);
+                    }
+                }
+            }
         }
     }
 }

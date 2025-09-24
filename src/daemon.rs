@@ -4,7 +4,48 @@ use std::time::Duration;
 use tokio::time;
 
 use crate::config::AppConfig;
-use crate::run_inquiry_mode;
+
+// Função para executar inquérito usando processo separado
+async fn run_inquiry_safe() -> Result<()> {
+    use tokio::process::Command;
+    use std::env;
+
+    // Obter o caminho do executável atual
+    let current_exe = env::current_exe()
+        .map_err(|e| anyhow::anyhow!("Não foi possível obter caminho do executável: {e}"))?;
+
+    println!("🚀 Iniciando inquérito em processo separado...");
+
+    // Executar o inquérito em um processo separado com timeout
+    let mut child = Command::new(&current_exe)
+        .arg("--inquiry")
+        .spawn()
+        .map_err(|e| anyhow::anyhow!("Erro ao iniciar processo de inquérito: {e}"))?;
+
+    // Aguardar com timeout de 5 minutos
+    let timeout_duration = Duration::from_secs(300);
+
+    match tokio::time::timeout(timeout_duration, child.wait()).await {
+        Ok(Ok(status)) => {
+            if status.success() {
+                println!("✅ Inquérito concluído com sucesso!");
+                Ok(())
+            } else {
+                eprintln!("⚠️  Inquérito terminou com código: {}", status.code().unwrap_or(-1));
+                Ok(()) // Não falhar o daemon
+            }
+        }
+        Ok(Err(e)) => {
+            eprintln!("⚠️  Erro ao aguardar processo de inquérito: {e}");
+            Ok(()) // Não falhar o daemon
+        }
+        Err(_) => {
+            eprintln!("⚠️  Timeout no inquérito (5 minutos). Terminando processo...");
+            let _ = child.kill().await;
+            Ok(()) // Não falhar o daemon por timeout
+        }
+    }
+}
 
 pub async fn run_daemon() -> Result<()> {
     // Carregar configuração
@@ -19,7 +60,7 @@ pub async fn run_daemon() -> Result<()> {
         "📝 Executando primeiro inquérito... ({})",
         Local::now().format("%H:%M:%S")
     );
-    if let Err(e) = run_inquiry_mode() {
+    if let Err(e) = run_inquiry_safe().await {
         eprintln!("❌ Erro no inquérito inicial: {e}");
     } else {
         println!("✅ Primeiro inquérito concluído!");
@@ -49,7 +90,7 @@ pub async fn run_daemon() -> Result<()> {
         );
 
         // Executar inquérito
-        match run_inquiry_mode() {
+        match run_inquiry_safe().await {
             Ok(_) => {
                 println!("✅ Inquérito #{inquiry_count} concluído com sucesso!");
             }
