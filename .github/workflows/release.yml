@@ -17,9 +17,6 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             name: linux-amd64
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-musl
-            name: linux-amd64-musl
           - os: macos-latest
             target: x86_64-apple-darwin
             name: darwin-amd64
@@ -178,12 +175,6 @@ jobs:
           cp README.md LICENSE install.sh acv-inq-linux-amd64/
           tar -czf acv-inq-linux-amd64.tar.gz acv-inq-linux-amd64/
 
-          # Linux musl
-          mkdir -p acv-inq-linux-amd64-musl
-          cp dist/acv-inq-linux-amd64-musl acv-inq-linux-amd64-musl/acv-inq
-          cp README.md LICENSE install.sh acv-inq-linux-amd64-musl/
-          tar -czf acv-inq-linux-amd64-musl.tar.gz acv-inq-linux-amd64-musl/
-
           # macOS Intel
           mkdir -p acv-inq-darwin-amd64
           cp dist/acv-inq-darwin-amd64 acv-inq-darwin-amd64/acv-inq
@@ -222,7 +213,6 @@ jobs:
           body_path: CHANGELOG.md
           files: |
             acv-inq-linux-amd64.tar.gz
-            acv-inq-linux-amd64-musl.tar.gz
             acv-inq-darwin-amd64.tar.gz
             acv-inq-darwin-arm64.tar.gz
             acv-inq-windows-amd64.zip
