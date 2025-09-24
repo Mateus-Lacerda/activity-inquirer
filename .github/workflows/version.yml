@@ -20,7 +20,7 @@ on:
 jobs:
   version:
     runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, '[skip ci]') && !contains(github.event.head_commit.message, '[skip version]')"
+    if: "!contains(github.event.head_commit.message, '[skip ci]') && !contains(github.event.head_commit.message, '[skip version]') && !contains(github.event.head_commit.message, 'chore: bump version')"
     
     steps:
       - name: Checkout code
@@ -44,9 +44,14 @@ jobs:
         id: current_version
         run: |
           # Tentar pegar a última tag
-          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          echo "last_tag=$LAST_TAG" >> $GITHUB_OUTPUT
-          echo "Última tag encontrada: $LAST_TAG"
+          if git describe --tags --abbrev=0 >/dev/null 2>&1; then
+            LAST_TAG=$(git describe --tags --abbrev=0)
+            echo "last_tag=$LAST_TAG" >> $GITHUB_OUTPUT
+            echo "Última tag encontrada: $LAST_TAG"
+          else
+            echo "last_tag=v0.0.0" >> $GITHUB_OUTPUT
+            echo "Nenhuma tag encontrada, usando v0.0.0 como base"
+          fi
 
       - name: Determine version bump type
         id: version_type
@@ -55,10 +60,20 @@ jobs:
             echo "bump_type=${{ github.event.inputs.version_type }}" >> $GITHUB_OUTPUT
           else
             # Analisar commits para determinar tipo de bump
-            COMMITS=$(git log ${{ steps.current_version.outputs.last_tag }}..HEAD --oneline)
-            echo "Commits desde a última tag:"
+            LAST_TAG="${{ steps.current_version.outputs.last_tag }}"
+
+            if [ "$LAST_TAG" = "v0.0.0" ]; then
+              # Primeiro release - analisar todos os commits
+              COMMITS=$(git log --oneline)
+              echo "Primeiro release - analisando todos os commits:"
+            else
+              # Analisar commits desde a última tag
+              COMMITS=$(git log $LAST_TAG..HEAD --oneline)
+              echo "Commits desde a última tag $LAST_TAG:"
+            fi
+
             echo "$COMMITS"
-            
+
             if echo "$COMMITS" | grep -qiE "(breaking|major|BREAKING CHANGE)"; then
               echo "bump_type=major" >> $GITHUB_OUTPUT
               echo "Detectado: MAJOR (breaking changes)"
@@ -76,17 +91,24 @@ jobs:
         run: |
           CURRENT_VERSION=${{ steps.current_version.outputs.last_tag }}
           BUMP_TYPE=${{ steps.version_type.outputs.bump_type }}
-          
+
           # Remover 'v' prefix se existir
           CURRENT_VERSION=${CURRENT_VERSION#v}
-          
+
           # Calcular nova versão
-          NEW_VERSION=$(semver bump $BUMP_TYPE $CURRENT_VERSION)
+          if [ "$CURRENT_VERSION" = "0.0.0" ]; then
+            # Primeiro release - começar com 0.1.0
+            NEW_VERSION="0.1.0"
+            echo "Primeiro release - usando versão inicial: $NEW_VERSION"
+          else
+            NEW_VERSION=$(semver bump $BUMP_TYPE $CURRENT_VERSION)
+          fi
+
           NEW_TAG="v$NEW_VERSION"
-          
+
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
-          
+
           echo "Versão atual: $CURRENT_VERSION"
           echo "Tipo de bump: $BUMP_TYPE"
           echo "Nova versão: $NEW_VERSION"
@@ -122,16 +144,21 @@ jobs:
         run: |
           NEW_TAG=${{ steps.new_version.outputs.new_tag }}
           LAST_TAG=${{ steps.current_version.outputs.last_tag }}
-          
+
           echo "## Changelog $NEW_TAG" > CHANGELOG_TEMP.md
           echo "" >> CHANGELOG_TEMP.md
-          
-          # Commits desde a última tag
-          git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" --no-merges >> CHANGELOG_TEMP.md
-          
-          echo "" >> CHANGELOG_TEMP.md
-          echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/$LAST_TAG...$NEW_TAG" >> CHANGELOG_TEMP.md
-          
+
+          # Commits desde a última tag (ou todos se for o primeiro)
+          if [ "$LAST_TAG" = "v0.0.0" ]; then
+            echo "### 🎉 Primeiro Release" >> CHANGELOG_TEMP.md
+            echo "" >> CHANGELOG_TEMP.md
+            git log --pretty=format:"- %s (%h)" --no-merges >> CHANGELOG_TEMP.md
+          else
+            git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" --no-merges >> CHANGELOG_TEMP.md
+            echo "" >> CHANGELOG_TEMP.md
+            echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/$LAST_TAG...$NEW_TAG" >> CHANGELOG_TEMP.md
+          fi
+
           # Mostrar changelog
           echo "Changelog gerado:"
           cat CHANGELOG_TEMP.md

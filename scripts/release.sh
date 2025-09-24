@@ -55,9 +55,17 @@ fi
 
 log "Tipo de release: $RELEASE_TYPE"
 
-# Obter versão atual
+# Obter versão atual do Cargo.toml
 CURRENT_VERSION=$(grep '^version = ' Cargo.toml | sed 's/version = "\(.*\)"/\1/')
-log "Versão atual: $CURRENT_VERSION"
+log "Versão atual no Cargo.toml: $CURRENT_VERSION"
+
+# Verificar se há tags no repositório
+if git describe --tags --abbrev=0 >/dev/null 2>&1; then
+    LAST_TAG=$(git describe --tags --abbrev=0)
+    log "Última tag no repositório: $LAST_TAG"
+else
+    log "Nenhuma tag encontrada - este será o primeiro release"
+fi
 
 # Calcular nova versão (versão simples sem dependências externas)
 IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
