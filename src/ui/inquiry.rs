@@ -1,8 +1,8 @@
-use anyhow::Result;
-use egui::{CentralPanel, Context, TextEdit, Button, RichText};
 use crate::database::Database;
 use crate::fonts;
 use crate::models::Activity;
+use anyhow::Result;
+use egui::{Button, CentralPanel, Context, RichText, TextEdit};
 
 pub struct InquiryApp {
     db: Database,
@@ -28,28 +28,29 @@ impl InquiryApp {
             should_close: false,
             fonts_configured: false,
         };
-        
+
         app.setup_question()?;
         Ok(app)
     }
 
     fn setup_question(&mut self) -> Result<()> {
         let count = self.db.count_activities_today()?;
-        
+
         if count == 0 {
             self.is_first_question = true;
             self.question_text = "O que você está fazendo agora?".to_string();
         } else {
             self.is_first_question = false;
             if let Some(last_activity) = self.db.get_last_activity_today()? {
-                self.question_text = format!("Você ainda está fazendo \"{}\"?", last_activity.description);
+                self.question_text =
+                    format!("Você ainda está fazendo \"{}\"?", last_activity.description);
                 self.last_activity = Some(last_activity);
             } else {
                 self.question_text = "O que você está fazendo agora?".to_string();
                 self.is_first_question = true;
             }
         }
-        
+
         Ok(())
     }
 
@@ -59,13 +60,14 @@ impl InquiryApp {
             return Ok(());
         }
 
-        self.db.add_activity(self.current_input.trim().to_string())?;
+        self.db
+            .add_activity(self.current_input.trim().to_string())?;
         self.message = Some("Atividade salva com sucesso!".to_string());
         self.current_input.clear();
-        
+
         // Fechar a aplicação após salvar
         self.should_close = true;
-        
+
         Ok(())
     }
 
@@ -82,7 +84,7 @@ impl InquiryApp {
             self.is_first_question = true;
             return Ok(());
         }
-        
+
         self.should_close = true;
         Ok(())
     }
@@ -99,31 +101,32 @@ impl eframe::App for InquiryApp {
         CentralPanel::default().show(ctx, |ui| {
             ui.vertical_centered(|ui| {
                 ui.add_space(50.0);
-                
+
                 // Título
                 ui.label(RichText::new("Activity Inquirer").size(24.0).strong());
                 ui.add_space(30.0);
-                
+
                 // Pergunta
                 ui.label(RichText::new(&self.question_text).size(16.0));
                 ui.add_space(20.0);
-                
+
                 if self.is_first_question {
                     // Campo de texto para nova atividade
                     ui.horizontal(|ui| {
                         ui.label("Atividade:");
-                        let response = ui.add(TextEdit::singleline(&mut self.current_input)
-                            .desired_width(300.0));
-                        
+                        let response = ui.add(
+                            TextEdit::singleline(&mut self.current_input).desired_width(300.0),
+                        );
+
                         if response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
                             if let Err(e) = self.save_activity() {
                                 self.message = Some(format!("Erro ao salvar: {e}"));
                             }
                         }
                     });
-                    
+
                     ui.add_space(20.0);
-                    
+
                     if ui.add(Button::new("Salvar")).clicked() {
                         if let Err(e) = self.save_activity() {
                             self.message = Some(format!("Erro ao salvar: {e}"));
@@ -137,7 +140,7 @@ impl eframe::App for InquiryApp {
                                 self.message = Some(format!("Erro: {e}"));
                             }
                         }
-                        
+
                         if ui.add(Button::new("Não")).clicked() {
                             if let Err(e) = self.handle_yes_no_response(false) {
                                 self.message = Some(format!("Erro: {e}"));
@@ -145,22 +148,22 @@ impl eframe::App for InquiryApp {
                         }
                     });
                 }
-                
+
                 ui.add_space(20.0);
-                
+
                 // Mensagem de status
                 if let Some(ref message) = self.message {
                     ui.label(RichText::new(message).color(egui::Color32::GREEN));
                 }
-                
+
                 ui.add_space(20.0);
-                
+
                 if ui.add(Button::new("Cancelar")).clicked() {
                     self.should_close = true;
                 }
             });
         });
-        
+
         // Fechar a aplicação se necessário
         if self.should_close {
             ctx.send_viewport_cmd(egui::ViewportCommand::Close);

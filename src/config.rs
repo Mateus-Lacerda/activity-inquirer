@@ -23,14 +23,15 @@ impl Default for AppConfig {
 impl AppConfig {
     pub fn load() -> Result<Self> {
         let config_path = Self::get_config_path()?;
-        
+
         if config_path.exists() {
-            let content = fs::read_to_string(&config_path)
-                .with_context(|| format!("Falha ao ler arquivo de configuração: {config_path:?}"))?;
-            
+            let content = fs::read_to_string(&config_path).with_context(|| {
+                format!("Falha ao ler arquivo de configuração: {config_path:?}")
+            })?;
+
             let config: AppConfig = toml::from_str(&content)
                 .with_context(|| "Falha ao parsear arquivo de configuração")?;
-            
+
             Ok(config)
         } else {
             // Criar configuração padrão se não existir
@@ -39,25 +40,25 @@ impl AppConfig {
             Ok(config)
         }
     }
-    
+
     pub fn save(&self) -> Result<()> {
         let config_path = Self::get_config_path()?;
-        
+
         // Criar diretório se não existir
         if let Some(parent) = config_path.parent() {
             fs::create_dir_all(parent)
                 .with_context(|| format!("Falha ao criar diretório de configuração: {parent:?}"))?;
         }
-        
-        let content = toml::to_string_pretty(self)
-            .with_context(|| "Falha ao serializar configuração")?;
-        
+
+        let content =
+            toml::to_string_pretty(self).with_context(|| "Falha ao serializar configuração")?;
+
         fs::write(&config_path, content)
             .with_context(|| format!("Falha ao salvar arquivo de configuração: {config_path:?}"))?;
-        
+
         Ok(())
     }
-    
+
     fn get_config_path() -> Result<PathBuf> {
         let config_dir = if cfg!(target_os = "windows") {
             dirs::config_dir()
@@ -69,14 +70,14 @@ impl AppConfig {
             dirs::config_dir()
                 .context("Não foi possível encontrar o diretório de configuração no Linux")?
         };
-        
+
         Ok(config_dir.join("activity-inquirer").join("config.toml"))
     }
-    
+
     pub fn get_daemon_interval_seconds(&self) -> u64 {
         self.daemon_interval_minutes * 60
     }
-    
+
     pub fn get_available_intervals() -> Vec<(String, u64)> {
         vec![
             ("1 minuto".to_string(), 1),
@@ -90,7 +91,7 @@ impl AppConfig {
             ("8 horas".to_string(), 480),
         ]
     }
-    
+
     pub fn format_interval(&self) -> String {
         Self::format_interval_static(self.daemon_interval_minutes)
     }

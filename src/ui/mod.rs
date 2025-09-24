@@ -1,7 +1,7 @@
 pub mod inquiry;
 pub mod settings;
-pub mod viewer;
 pub mod theme;
+pub mod viewer;
 
 pub use inquiry::InquiryApp;
 pub use settings::SettingsApp;

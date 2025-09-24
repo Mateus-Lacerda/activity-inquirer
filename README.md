@@ -176,15 +176,9 @@ Atualmente suporta apenas o tema Gruvbox em duas variantes:
 
 O tema pode ser alterado no modo visualizador através do seletor no canto superior direito.
 
-## 🚀 Releases e CI/CD
+## 🚀 Releases com GoReleaser
 
-O projeto usa GitHub Actions para automação completa:
-
-### **Versionamento Automático**
-- Push na branch `main` → versionamento automático baseado nos commits
-- Commits com `feat:` → bump `minor`
-- Commits com `BREAKING CHANGE:` → bump `major`
-- Outros commits → bump `patch`
+O projeto usa GoReleaser para automação de releases:
 
 ### **Release Manual**
 ```bash
@@ -205,10 +199,12 @@ Cada release gera binários para:
 - macOS aarch64 (Apple Silicon)
 - Windows x86_64
 
-### **Workflows**
-- **CI**: Testes, linting e builds em todas as plataformas
-- **Release**: Compilação e publicação automática de binários
-- **Version**: Versionamento semântico automático
+### **Funcionalidades do GoReleaser**
+- **Changelog automático** baseado em commits convencionais
+- **Release notes** com template personalizado
+- **Arquivos organizados** por plataforma
+- **Scripts de instalação** incluídos
+- **Checksums** para verificação de integridade
 
 ## 📄 Licença
 

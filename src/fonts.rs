@@ -40,4 +40,3 @@ pub fn setup_fonts(ctx: &Context) {
     // Aplicar as configurações de fonte
     ctx.set_fonts(fonts);
 }
-

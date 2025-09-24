@@ -9,8 +9,7 @@ pub struct Activity {
     pub date: NaiveDate,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum Theme {
     #[default]
     GruvboxDark,

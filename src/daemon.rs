@@ -1,7 +1,7 @@
 use anyhow::Result;
+use chrono::Local;
 use std::time::Duration;
 use tokio::time;
-use chrono::Local;
 
 use crate::config::AppConfig;
 use crate::run_inquiry_mode;
@@ -15,7 +15,10 @@ pub async fn run_daemon() -> Result<()> {
     println!();
 
     // Executar inquérito imediatamente ao iniciar
-    println!("📝 Executando primeiro inquérito... ({})", Local::now().format("%H:%M:%S"));
+    println!(
+        "📝 Executando primeiro inquérito... ({})",
+        Local::now().format("%H:%M:%S")
+    );
     if let Err(e) = run_inquiry_mode() {
         eprintln!("❌ Erro no inquérito inicial: {e}");
     } else {
@@ -26,21 +29,25 @@ pub async fn run_daemon() -> Result<()> {
     // Configurar timer para executar no intervalo especificado
     let interval_seconds = config.get_daemon_interval_seconds();
     let mut interval = time::interval(Duration::from_secs(interval_seconds));
-    
+
     // Pular o primeiro tick (já executamos o inquérito inicial)
     interval.tick().await;
-    
+
     let mut inquiry_count = 1;
-    
+
     loop {
         // Aguardar próximo tick
         interval.tick().await;
-        
+
         inquiry_count += 1;
         let now = Local::now();
-        
-        println!("⏰ Hora do inquérito #{} ({})", inquiry_count, now.format("%H:%M:%S"));
-        
+
+        println!(
+            "⏰ Hora do inquérito #{} ({})",
+            inquiry_count,
+            now.format("%H:%M:%S")
+        );
+
         // Executar inquérito
         match run_inquiry_mode() {
             Ok(_) => {
@@ -51,10 +58,13 @@ pub async fn run_daemon() -> Result<()> {
                 eprintln!("🔄 Continuando execução...");
             }
         }
-        
+
         // Calcular próximo inquérito
         let next_inquiry = now + chrono::Duration::minutes(config.daemon_interval_minutes as i64);
-        println!("📅 Próximo inquérito em: {}", next_inquiry.format("%H:%M:%S"));
+        println!(
+            "📅 Próximo inquérito em: {}",
+            next_inquiry.format("%H:%M:%S")
+        );
         println!();
     }
 }

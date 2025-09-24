@@ -1,9 +1,9 @@
 mod config;
+mod daemon;
 mod database;
 mod fonts;
 mod models;
 mod ui;
-mod daemon;
 
 use anyhow::Result;
 use clap::{Arg, Command};
@@ -18,13 +18,13 @@ async fn main() -> Result<()> {
             Arg::new("inquiry")
                 .long("inquiry")
                 .help("Modo de inquérito - pergunta sobre atividade atual")
-                .action(clap::ArgAction::SetTrue)
+                .action(clap::ArgAction::SetTrue),
         )
         .arg(
             Arg::new("daemon")
                 .long("daemon")
                 .help("Modo daemon - executa inquéritos automaticamente a cada hora")
-                .action(clap::ArgAction::SetTrue)
+                .action(clap::ArgAction::SetTrue),
         )
         .arg(
             Arg::new("settings")
@@ -57,7 +57,7 @@ fn run_inquiry_mode() -> Result<()> {
             .with_inner_size([400.0, 300.0])
             .with_title("Activity Inquirer")
             .with_resizable(false),
-            // .with_always_on_top(),
+        // .with_always_on_top(),
         ..Default::default()
     };
 
@@ -68,7 +68,8 @@ fn run_inquiry_mode() -> Result<()> {
             ui::theme::apply_theme(&cc.egui_ctx, models::Theme::default());
             Box::new(app)
         }),
-    ).map_err(|e| anyhow::anyhow!("Erro ao executar aplicação: {e}"))?;
+    )
+    .map_err(|e| anyhow::anyhow!("Erro ao executar aplicação: {e}"))?;
 
     Ok(())
 }
@@ -92,7 +93,8 @@ fn run_viewer_mode() -> Result<()> {
             ui::theme::apply_theme(&cc.egui_ctx, models::Theme::default());
             Box::new(app)
         }),
-    ).map_err(|e| anyhow::anyhow!("Erro ao executar aplicação: {e}"))?;
+    )
+    .map_err(|e| anyhow::anyhow!("Erro ao executar aplicação: {e}"))?;
 
     Ok(())
 }
@@ -116,7 +118,8 @@ fn run_settings_mode() -> Result<()> {
             ui::theme::apply_theme(&cc.egui_ctx, models::Theme::default());
             Box::new(app)
         }),
-    ).map_err(|e| anyhow::anyhow!("Erro ao executar aplicação: {e}"))?;
+    )
+    .map_err(|e| anyhow::anyhow!("Erro ao executar aplicação: {e}"))?;
 
     Ok(())
 }
