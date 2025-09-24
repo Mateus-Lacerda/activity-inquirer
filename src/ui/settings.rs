@@ -82,7 +82,7 @@ impl eframe::App for SettingsApp {
                             ui.label("Intervalo entre inquéritos:");
                             
                             ComboBox::from_id_source("interval_combo")
-                                .selected_text(format!("{}", AppConfig::format_interval_static(self.selected_interval)))
+                                .selected_text(AppConfig::format_interval_static(self.selected_interval).to_string())
                                 .show_ui(ui, |ui| {
                                     for (label, minutes) in AppConfig::get_available_intervals() {
                                         ui.selectable_value(&mut self.selected_interval, minutes, label);
@@ -135,7 +135,7 @@ impl eframe::App for SettingsApp {
                 ui.horizontal(|ui| {
                     if ui.add(Button::new("󰆓 Salvar Configurações").min_size([150.0, 30.0].into())).clicked() {
                         if let Err(e) = self.save_config() {
-                            self.message = Some(format!("❌ Erro ao salvar: {}", e));
+                            self.message = Some(format!("❌ Erro ao salvar: {e}"));
                         }
                     }
                     

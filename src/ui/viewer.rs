@@ -233,19 +233,19 @@ impl ViewerApp {
                                             let minutes = duration_std.as_secs() / 60;
                                             if minutes > 0 {
                                                 let time_diff = if minutes < 60 {
-                                                    format!("{}min depois", minutes)
+                                                    format!("{minutes}min depois")
                                                 } else {
                                                     let hours = minutes / 60;
                                                     let remaining_minutes = minutes % 60;
                                                     if remaining_minutes == 0 {
-                                                        format!("{}h depois", hours)
+                                                        format!("{hours}h depois")
                                                     } else {
-                                                        format!("{}h{}m depois", hours, remaining_minutes)
+                                                        format!("{hours}h{remaining_minutes}m depois")
                                                     }
                                                 };
-                                                println!("Tempo desde a última atividade: {}", time_diff);
-                                                let time_label = format!("󱑆 {}", time_diff);
-                                                println!("time_label: {}", time_label);
+                                                println!("Tempo desde a última atividade: {time_diff}");
+                                                let time_label = format!("󱑆 {time_diff}");
+                                                println!("time_label: {time_label}");
                                                 ui.label(RichText::new(time_label)
                                                     .size(10.0)
                                                     .color(egui::Color32::GRAY));
@@ -310,7 +310,7 @@ impl ViewerApp {
                         ui.label("Intervalo entre inquéritos:");
                         
                         ComboBox::from_id_source("interval_combo")
-                            .selected_text(format!("{}", AppConfig::format_interval_static(self.selected_interval)))
+                            .selected_text(AppConfig::format_interval_static(self.selected_interval).to_string())
                             .show_ui(ui, |ui| {
                                 for (label, minutes) in AppConfig::get_available_intervals() {
                                     ui.selectable_value(&mut self.selected_interval, minutes, label);
@@ -335,7 +335,7 @@ impl ViewerApp {
             ui.horizontal(|ui| {
                 if ui.button("💾 Salvar Configurações").clicked() {
                     if let Err(e) = self.save_config() {
-                        self.message = Some(format!("❌ Erro ao salvar: {}", e));
+                        self.message = Some(format!("❌ Erro ao salvar: {e}"));
                     }
                 }
                 

@@ -82,7 +82,7 @@ impl Database {
 
         let mut activities = Vec::new();
         for activity in activity_iter {
-            println!("Atividade: {:?}", activity);
+            println!("Atividade: {activity:?}");
             activities.push(activity?);
         }
 

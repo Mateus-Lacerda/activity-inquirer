@@ -26,7 +26,7 @@ impl AppConfig {
         
         if config_path.exists() {
             let content = fs::read_to_string(&config_path)
-                .with_context(|| format!("Falha ao ler arquivo de configuração: {:?}", config_path))?;
+                .with_context(|| format!("Falha ao ler arquivo de configuração: {config_path:?}"))?;
             
             let config: AppConfig = toml::from_str(&content)
                 .with_context(|| "Falha ao parsear arquivo de configuração")?;
@@ -46,14 +46,14 @@ impl AppConfig {
         // Criar diretório se não existir
         if let Some(parent) = config_path.parent() {
             fs::create_dir_all(parent)
-                .with_context(|| format!("Falha ao criar diretório de configuração: {:?}", parent))?;
+                .with_context(|| format!("Falha ao criar diretório de configuração: {parent:?}"))?;
         }
         
         let content = toml::to_string_pretty(self)
             .with_context(|| "Falha ao serializar configuração")?;
         
         fs::write(&config_path, content)
-            .with_context(|| format!("Falha ao salvar arquivo de configuração: {:?}", config_path))?;
+            .with_context(|| format!("Falha ao salvar arquivo de configuração: {config_path:?}"))?;
         
         Ok(())
     }
@@ -75,10 +75,6 @@ impl AppConfig {
     
     pub fn get_daemon_interval_seconds(&self) -> u64 {
         self.daemon_interval_minutes * 60
-    }
-    
-    pub fn set_daemon_interval_minutes(&mut self, minutes: u64) {
-        self.daemon_interval_minutes = minutes.max(1); // Mínimo 1 minuto
     }
     
     pub fn get_available_intervals() -> Vec<(String, u64)> {
@@ -108,7 +104,7 @@ impl AppConfig {
             if remaining_minutes == 0 {
                 format!("{} hora{}", hours, if hours == 1 { "" } else { "s" })
             } else {
-                format!("{}h{}m", hours, remaining_minutes)
+                format!("{hours}h{remaining_minutes}m")
             }
         }
     }

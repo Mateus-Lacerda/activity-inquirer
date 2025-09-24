@@ -17,7 +17,7 @@ pub async fn run_daemon() -> Result<()> {
     // Executar inquérito imediatamente ao iniciar
     println!("📝 Executando primeiro inquérito... ({})", Local::now().format("%H:%M:%S"));
     if let Err(e) = run_inquiry_mode() {
-        eprintln!("❌ Erro no inquérito inicial: {}", e);
+        eprintln!("❌ Erro no inquérito inicial: {e}");
     } else {
         println!("✅ Primeiro inquérito concluído!");
     }
@@ -44,10 +44,10 @@ pub async fn run_daemon() -> Result<()> {
         // Executar inquérito
         match run_inquiry_mode() {
             Ok(_) => {
-                println!("✅ Inquérito #{} concluído com sucesso!", inquiry_count);
+                println!("✅ Inquérito #{inquiry_count} concluído com sucesso!");
             }
             Err(e) => {
-                eprintln!("❌ Erro no inquérito #{}: {}", inquiry_count, e);
+                eprintln!("❌ Erro no inquérito #{inquiry_count}: {e}");
                 eprintln!("🔄 Continuando execução...");
             }
         }
