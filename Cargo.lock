@@ -103,6 +103,7 @@ dependencies = [
  "serde",
  "tokio",
  "toml",
+ "winapi",
 ]
 
 [[package]]

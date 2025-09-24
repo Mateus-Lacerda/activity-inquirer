@@ -3,39 +3,10 @@ version: 2
 project_name: acv-inq
 
 builds:
-  - id: linux-amd64
-    binary: acv-inq
-    goos: [linux]
-    goarch: [amd64]
-    skip: true
-
-  - id: linux-musl
-    binary: acv-inq
-    goos: [linux]
-    goarch: [amd64]
-    skip: true
-
-  - id: darwin-amd64
-    binary: acv-inq
-    goos: [darwin]
-    goarch: [amd64]
-    skip: true
-
-  - id: darwin-arm64
-    binary: acv-inq
-    goos: [darwin]
-    goarch: [arm64]
-    skip: true
-
-  - id: windows-amd64
-    binary: acv-inq
-    goos: [windows]
-    goarch: [amd64]
-    skip: true
+  - skip: true
 
 archives:
   - id: linux-amd64
-    builds: [linux-amd64]
     format: tar.gz
     name_template: "{{ .ProjectName }}-linux-amd64"
     files:
@@ -46,7 +17,6 @@ archives:
       - install.sh
 
   - id: linux-musl
-    builds: [linux-musl]
     format: tar.gz
     name_template: "{{ .ProjectName }}-linux-amd64-musl"
     files:
@@ -57,7 +27,6 @@ archives:
       - install.sh
 
   - id: darwin-amd64
-    builds: [darwin-amd64]
     format: tar.gz
     name_template: "{{ .ProjectName }}-darwin-amd64"
     files:
@@ -68,7 +37,6 @@ archives:
       - install.sh
 
   - id: darwin-arm64
-    builds: [darwin-arm64]
     format: tar.gz
     name_template: "{{ .ProjectName }}-darwin-arm64"
     files:
@@ -79,7 +47,6 @@ archives:
       - install.sh
 
   - id: windows-amd64
-    builds: [windows-amd64]
     format: zip
     name_template: "{{ .ProjectName }}-windows-amd64"
     files:
