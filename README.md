@@ -8,7 +8,7 @@ Uma aplicação em Rust para rastrear atividades pessoais com interface gráfica
 
 ## Funcionalidades
 
-- **Modo Inquérito** (`acv-inq --inquiry`): Pergunta sobre sua atividade atual
+- **Modo Inquérito** (`acv-inq --inquiry`): Pergunta sFobre sua atividade atual
   - Primeira pergunta do dia: "O que você está fazendo agora?"
   - Perguntas subsequentes: "Você ainda está fazendo [atividade anterior]?"
 - **Modo Visualizador** (`acv-inq`): Interface para visualizar atividades registradas
@@ -176,9 +176,9 @@ Atualmente suporta apenas o tema Gruvbox em duas variantes:
 
 O tema pode ser alterado no modo visualizador através do seletor no canto superior direito.
 
-## 🚀 Releases com GoReleaser
+## 🚀 Releases Automáticos
 
-O projeto usa GoReleaser para automação de releases:
+O projeto usa GitHub Actions para automação de releases:
 
 ### **Release Manual**
 ```bash
@@ -199,12 +199,12 @@ Cada release gera binários para:
 - macOS aarch64 (Apple Silicon)
 - Windows x86_64
 
-### **Funcionalidades do GoReleaser**
-- **Changelog automático** baseado em commits convencionais
-- **Release notes** com template personalizado
+### **Funcionalidades do Sistema**
+- **Builds paralelos** em runners nativos
+- **Changelog automático** baseado em commits
 - **Arquivos organizados** por plataforma
 - **Scripts de instalação** incluídos
-- **Checksums** para verificação de integridade
+- **Release automático** no GitHub
 
 ## 📄 Licença
 

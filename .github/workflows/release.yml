@@ -83,7 +83,7 @@ jobs:
           name: acv-inq-${{ matrix.name }}
           path: dist/
 
-  goreleaser:
+  release:
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -92,20 +92,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: stable
-
       - name: Download all artifacts
         uses: actions/download-artifact@v3
         with:
-          path: dist/
+          path: artifacts/
 
       - name: Organize artifacts
         run: |
           mkdir -p dist
-          find dist/ -name "acv-inq-*" -type f -exec mv {} dist/ \;
+          find artifacts/ -name "acv-inq-*" -type f -exec cp {} dist/ \;
+          ls -la dist/
 
       - name: Create install scripts
         run: |
@@ -113,9 +109,9 @@ jobs:
           cat > install.sh << 'EOF'
           #!/bin/bash
           set -e
-          
+
           echo "🚀 Instalando Activity Inquirer..."
-          
+
           # Detectar sistema
           if [[ "$OSTYPE" == "linux-gnu"* ]]; then
               INSTALL_DIR="$HOME/.local/bin"
@@ -129,14 +125,14 @@ jobs:
               echo "❌ Sistema não suportado: $OSTYPE"
               exit 1
           fi
-          
+
           # Criar diretórios
           mkdir -p "$INSTALL_DIR" "$DESKTOP_DIR" "$ICON_DIR"
-          
+
           # Copiar binário
           cp acv-inq "$INSTALL_DIR/"
           chmod +x "$INSTALL_DIR/acv-inq"
-          
+
           echo "✅ Activity Inquirer instalado em $INSTALL_DIR/acv-inq"
           echo ""
           echo "📖 Uso:"
@@ -148,18 +144,18 @@ jobs:
           echo "🎉 Instalação concluída!"
           EOF
           chmod +x install.sh
-          
+
           # Windows install script
           cat > install.bat << 'EOF'
           @echo off
           echo 🚀 Instalando Activity Inquirer...
-          
+
           set INSTALL_DIR=%USERPROFILE%\AppData\Local\Programs\ActivityInquirer
-          
+
           if not exist "%INSTALL_DIR%" mkdir "%INSTALL_DIR%"
-          
+
           copy acv-inq.exe "%INSTALL_DIR%\"
-          
+
           echo ✅ Activity Inquirer instalado em %INSTALL_DIR%\acv-inq.exe
           echo.
           echo 📖 Uso:
@@ -174,11 +170,61 @@ jobs:
           pause
           EOF
 
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v5
+      - name: Create archives
+        run: |
+          # Linux GNU
+          mkdir -p acv-inq-linux-amd64
+          cp dist/acv-inq-linux-amd64 acv-inq-linux-amd64/acv-inq
+          cp README.md LICENSE install.sh acv-inq-linux-amd64/
+          tar -czf acv-inq-linux-amd64.tar.gz acv-inq-linux-amd64/
+
+          # Linux musl
+          mkdir -p acv-inq-linux-amd64-musl
+          cp dist/acv-inq-linux-amd64-musl acv-inq-linux-amd64-musl/acv-inq
+          cp README.md LICENSE install.sh acv-inq-linux-amd64-musl/
+          tar -czf acv-inq-linux-amd64-musl.tar.gz acv-inq-linux-amd64-musl/
+
+          # macOS Intel
+          mkdir -p acv-inq-darwin-amd64
+          cp dist/acv-inq-darwin-amd64 acv-inq-darwin-amd64/acv-inq
+          cp README.md LICENSE install.sh acv-inq-darwin-amd64/
+          tar -czf acv-inq-darwin-amd64.tar.gz acv-inq-darwin-amd64/
+
+          # macOS Apple Silicon
+          mkdir -p acv-inq-darwin-arm64
+          cp dist/acv-inq-darwin-arm64 acv-inq-darwin-arm64/acv-inq
+          cp README.md LICENSE install.sh acv-inq-darwin-arm64/
+          tar -czf acv-inq-darwin-arm64.tar.gz acv-inq-darwin-arm64/
+
+          # Windows
+          mkdir -p acv-inq-windows-amd64
+          cp dist/acv-inq-windows-amd64.exe acv-inq-windows-amd64/acv-inq.exe
+          cp README.md LICENSE install.bat acv-inq-windows-amd64/
+          cd acv-inq-windows-amd64 && zip -r ../acv-inq-windows-amd64.zip . && cd ..
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          if git describe --tags --abbrev=0 >/dev/null 2>&1; then
+            LAST_TAG=$(git describe --tags --abbrev=0)
+            echo "## Changelog" > CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            git log $LAST_TAG..HEAD --pretty=format:"- %s (%h)" --no-merges >> CHANGELOG.md
+          else
+            echo "## 🎉 Primeiro Release" > CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            echo "Versão inicial do Activity Inquirer com todas as funcionalidades principais." >> CHANGELOG.md
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
         with:
-          distribution: goreleaser
-          version: latest
-          args: release --clean
+          body_path: CHANGELOG.md
+          files: |
+            acv-inq-linux-amd64.tar.gz
+            acv-inq-linux-amd64-musl.tar.gz
+            acv-inq-darwin-amd64.tar.gz
+            acv-inq-darwin-arm64.tar.gz
+            acv-inq-windows-amd64.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
