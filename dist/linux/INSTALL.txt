@@ -1,0 +1,18 @@
+Activity Inquirer - Linux
+
+Para instalar:
+1. Copie o executável 'acv-inq' para um diretório no seu PATH
+   Exemplo: cp acv-inq ~/.local/bin/
+
+2. Torne-o executável:
+   chmod +x ~/.local/bin/acv-inq
+
+3. Execute:
+   acv-inq --help
+
+Modos disponíveis:
+- acv-inq              (Visualizador)
+- acv-inq --inquiry    (Inquérito manual)
+- acv-inq --daemon     (Daemon automático)
+
+Banco de dados será criado em: ~/.config/activity-inquirer/
