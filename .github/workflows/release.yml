@@ -1,0 +1,268 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: true
+        type: string
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      version: ${{ steps.get_version.outputs.version }}
+    steps:
+      - name: Get version
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.version }}
+          release_name: Activity Inquirer ${{ steps.get_version.outputs.version }}
+          body: |
+            ## Activity Inquirer ${{ steps.get_version.outputs.version }}
+            
+            ### 🚀 Funcionalidades
+            - **Rastreamento de atividades**: Interface intuitiva para registrar o que você está fazendo
+            - **Modo daemon**: Execução automática em background com intervalos configuráveis
+            - **Visualizador avançado**: Timeline das atividades com horários e intervalos
+            - **Configurações flexíveis**: Interface gráfica para personalizar comportamento
+            - **Temas Gruvbox**: Dark e Light themes profissionais
+            - **Fontes Nerd Font**: FiraCode com ícones e ligaduras embarcadas
+            - **Cross-platform**: Funciona em Linux, macOS e Windows
+            
+            ### 📦 Downloads
+            Escolha o arquivo apropriado para seu sistema:
+            - **Linux**: `acv-inq-linux-x86_64.tar.gz`
+            - **macOS**: `acv-inq-macos-x86_64.tar.gz` ou `acv-inq-macos-aarch64.tar.gz`
+            - **Windows**: `acv-inq-windows-x86_64.zip`
+            
+            ### 🛠️ Instalação
+            1. Baixe o arquivo para seu sistema
+            2. Extraia o conteúdo
+            3. Execute `./install.sh` (Linux/macOS) ou `install.bat` (Windows)
+            4. Ou copie manualmente para um diretório no seu PATH
+            
+            ### 📖 Uso
+            ```bash
+            # Visualizar atividades
+            acv-inq
+            
+            # Registrar nova atividade
+            acv-inq --inquiry
+            
+            # Configurações
+            acv-inq --settings
+            
+            # Modo daemon
+            acv-inq --daemon
+            ```
+          draft: false
+          prerelease: false
+
+  build:
+    needs: create-release
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            name: linux-x86_64
+            cross: false
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            name: linux-x86_64-musl
+            cross: true
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            name: macos-x86_64
+            cross: false
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            name: macos-aarch64
+            cross: true
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            name: windows-x86_64
+            cross: false
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install cross
+        if: matrix.cross
+        run: cargo install cross
+
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo build
+        uses: actions/cache@v3
+        with:
+          path: target
+          key: ${{ runner.os }}-${{ matrix.target }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libssl-dev
+
+      - name: Build binary
+        run: |
+          if [ "${{ matrix.cross }}" = "true" ]; then
+            cross build --release --target ${{ matrix.target }}
+          else
+            cargo build --release --target ${{ matrix.target }}
+          fi
+        shell: bash
+
+      - name: Create package directory
+        run: mkdir -p package
+
+      - name: Copy binary (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          cp target/${{ matrix.target }}/release/acv-inq package/
+          chmod +x package/acv-inq
+
+      - name: Copy binary (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cp target/${{ matrix.target }}/release/acv-inq.exe package/
+        shell: bash
+
+      - name: Copy additional files
+        run: |
+          cp README.md package/ || echo "README.md not found"
+          cp LICENSE package/ || echo "LICENSE not found"
+          cp -r scripts package/ || echo "scripts directory not found"
+
+      - name: Create install script (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          cat > package/install.sh << 'EOF'
+          #!/bin/bash
+          set -e
+          
+          echo "🚀 Instalando Activity Inquirer..."
+          
+          # Detectar sistema
+          if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+              INSTALL_DIR="$HOME/.local/bin"
+              DESKTOP_DIR="$HOME/.local/share/applications"
+              ICON_DIR="$HOME/.local/share/icons"
+          elif [[ "$OSTYPE" == "darwin"* ]]; then
+              INSTALL_DIR="/usr/local/bin"
+              DESKTOP_DIR="$HOME/Applications"
+              ICON_DIR="$HOME/.local/share/icons"
+          else
+              echo "❌ Sistema não suportado: $OSTYPE"
+              exit 1
+          fi
+          
+          # Criar diretórios
+          mkdir -p "$INSTALL_DIR" "$DESKTOP_DIR" "$ICON_DIR"
+          
+          # Copiar binário
+          cp acv-inq "$INSTALL_DIR/"
+          chmod +x "$INSTALL_DIR/acv-inq"
+          
+          echo "✅ Activity Inquirer instalado em $INSTALL_DIR/acv-inq"
+          echo ""
+          echo "📖 Uso:"
+          echo "  acv-inq              # Visualizar atividades"
+          echo "  acv-inq --inquiry    # Registrar atividade"
+          echo "  acv-inq --settings   # Configurações"
+          echo "  acv-inq --daemon     # Modo daemon"
+          echo ""
+          echo "🎉 Instalação concluída!"
+          EOF
+          chmod +x package/install.sh
+
+      - name: Create install script (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cat > package/install.bat << 'EOF'
+          @echo off
+          echo 🚀 Instalando Activity Inquirer...
+          
+          set INSTALL_DIR=%USERPROFILE%\AppData\Local\Programs\ActivityInquirer
+          
+          if not exist "%INSTALL_DIR%" mkdir "%INSTALL_DIR%"
+          
+          copy acv-inq.exe "%INSTALL_DIR%\"
+          
+          echo ✅ Activity Inquirer instalado em %INSTALL_DIR%\acv-inq.exe
+          echo.
+          echo 📖 Uso:
+          echo   acv-inq              # Visualizar atividades
+          echo   acv-inq --inquiry    # Registrar atividade
+          echo   acv-inq --settings   # Configurações
+          echo   acv-inq --daemon     # Modo daemon
+          echo.
+          echo 🎉 Instalação concluída!
+          echo.
+          echo ⚠️  Adicione %INSTALL_DIR% ao seu PATH para usar de qualquer lugar
+          pause
+          EOF
+        shell: bash
+
+      - name: Create archive (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          cd package
+          tar -czf ../acv-inq-${{ matrix.name }}.tar.gz *
+
+      - name: Create archive (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cd package
+          7z a ../acv-inq-${{ matrix.name }}.zip *
+        shell: bash
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./acv-inq-${{ matrix.name }}.${{ runner.os == 'Windows' && 'zip' || 'tar.gz' }}
+          asset_name: acv-inq-${{ matrix.name }}.${{ runner.os == 'Windows' && 'zip' || 'tar.gz' }}
+          asset_content_type: application/octet-stream

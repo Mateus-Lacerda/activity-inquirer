@@ -1,6 +1,10 @@
 # Activity Inquirer
 
-Uma aplicação em Rust para rastrear atividades pessoais com interface gráfica usando egui.
+[![CI](https://github.com/user/activity-inquirer/workflows/CI/badge.svg)](https://github.com/user/activity-inquirer/actions)
+[![Release](https://github.com/user/activity-inquirer/workflows/Release/badge.svg)](https://github.com/user/activity-inquirer/actions)
+[![Latest Release](https://img.shields.io/github/v/release/user/activity-inquirer)](https://github.com/user/activity-inquirer/releases/latest)
+
+Uma aplicação em Rust para rastrear atividades pessoais com interface gráfica moderna, modo daemon e funcionalidades avançadas.
 
 ## Funcionalidades
 
@@ -26,9 +30,27 @@ Uma aplicação em Rust para rastrear atividades pessoais com interface gráfica
 - **Temas**: Suporte ao tema Gruvbox (Dark/Light)
 - **Banco de dados**: SQLite armazenado em `~/.config/activity-inquirer/`
 
-## Instalação
+## 📦 Instalação
 
-### Instalação Automática (Recomendada)
+### 🚀 Instalação Rápida (Recomendada)
+
+1. **Baixe a versão mais recente** dos [releases](https://github.com/user/activity-inquirer/releases/latest)
+2. **Escolha o arquivo para seu sistema**:
+   - 🐧 Linux: `acv-inq-linux-x86_64.tar.gz`
+   - 🍎 macOS: `acv-inq-macos-x86_64.tar.gz` (Intel) ou `acv-inq-macos-aarch64.tar.gz` (M1/M2)
+   - 🪟 Windows: `acv-inq-windows-x86_64.zip`
+3. **Extraia e execute o instalador**:
+   ```bash
+   # Linux/macOS
+   tar -xzf acv-inq-*.tar.gz
+   cd acv-inq-*
+   ./install.sh
+
+   # Windows
+   # Extraia o ZIP e execute install.bat
+   ```
+
+### 🔧 Instalação via Script (Compilação Local)
 ```bash
 # Clonar o repositório
 git clone <url-do-repositorio>
@@ -153,3 +175,41 @@ Atualmente suporta apenas o tema Gruvbox em duas variantes:
 - Gruvbox Light
 
 O tema pode ser alterado no modo visualizador através do seletor no canto superior direito.
+
+## 🚀 Releases e CI/CD
+
+O projeto usa GitHub Actions para automação completa:
+
+### **Versionamento Automático**
+- Push na branch `main` → versionamento automático baseado nos commits
+- Commits com `feat:` → bump `minor`
+- Commits com `BREAKING CHANGE:` → bump `major`
+- Outros commits → bump `patch`
+
+### **Release Manual**
+```bash
+# Criar release patch (1.0.0 → 1.0.1)
+./scripts/release.sh patch
+
+# Criar release minor (1.0.0 → 1.1.0)
+./scripts/release.sh minor
+
+# Criar release major (1.0.0 → 2.0.0)
+./scripts/release.sh major
+```
+
+### **Builds Automáticos**
+Cada release gera binários para:
+- Linux x86_64 (glibc e musl)
+- macOS x86_64 (Intel)
+- macOS aarch64 (Apple Silicon)
+- Windows x86_64
+
+### **Workflows**
+- **CI**: Testes, linting e builds em todas as plataformas
+- **Release**: Compilação e publicação automática de binários
+- **Version**: Versionamento semântico automático
+
+## 📄 Licença
+
+MIT License - veja o arquivo LICENSE para detalhes.
