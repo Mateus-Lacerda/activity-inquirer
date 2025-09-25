@@ -360,4 +360,3 @@ get_db_location() {
         "windows") echo "%APPDATA%\\activity-inquirer\\" ;;
     esac
 }
-pause
