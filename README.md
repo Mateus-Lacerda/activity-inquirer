@@ -1,8 +1,8 @@
 # Activity Inquirer
 
-[![CI](https://github.com/user/activity-inquirer/workflows/CI/badge.svg)](https://github.com/user/activity-inquirer/actions)
-[![Release](https://github.com/user/activity-inquirer/workflows/Release/badge.svg)](https://github.com/user/activity-inquirer/actions)
-[![Latest Release](https://img.shields.io/github/v/release/user/activity-inquirer)](https://github.com/user/activity-inquirer/releases/latest)
+[![CI](https://github.com/Mateus-Lacerda/activity-inquirer/workflows/CI/badge.svg)](https://github.com/Mateus-Lacerda/activity-inquirer/actions)
+[![Release](https://github.com/Mateus-Lacerda/activity-inquirer/workflows/Release/badge.svg)](https://github.com/Mateus-Lacerda/activity-inquirer/actions)
+[![Latest Release](https://img.shields.io/github/v/release/Mateus-Lacerda/activity-inquirer)](https://github.com/Mateus-Lacerda/activity-inquirer/releases/latest)
 
 Uma aplicação em Rust para rastrear atividades pessoais com interface gráfica moderna, modo daemon e funcionalidades avançadas.
 
