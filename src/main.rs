@@ -58,7 +58,12 @@ fn run_inquiry_mode() -> Result<()> {
             .with_title("Activity Inquirer")
             .with_resizable(false)
             .with_close_button(true),
-        // .with_always_on_top(),
+        // Configurações agressivas para responsividade
+        run_and_return: false,
+        event_loop_builder: None,
+        centered: true,
+        follow_system_theme: false,
+        default_theme: eframe::Theme::Dark,
         ..Default::default()
     };
 
@@ -88,8 +93,13 @@ fn run_viewer_mode() -> Result<()> {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([800.0, 600.0])
             .with_title("Activity Inquirer - Visualizador")
-            .with_min_inner_size([600.0, 400.0])
-            .with_always_on_top(),
+            .with_min_inner_size([600.0, 400.0]),
+        // Configurações agressivas para responsividade
+        run_and_return: false,
+        event_loop_builder: None,
+        centered: true,
+        follow_system_theme: false,
+        default_theme: eframe::Theme::Dark,
         ..Default::default()
     };
 
@@ -113,8 +123,11 @@ fn run_settings_mode() -> Result<()> {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([600.0, 500.0])
             .with_title("Activity Inquirer - Configurações")
-            .with_min_inner_size([500.0, 400.0])
-            .with_always_on_top(),
+            .with_min_inner_size([500.0, 400.0]),
+        // Configurações para melhor responsividade
+        run_and_return: false,
+        event_loop_builder: None,
+        centered: true,
         ..Default::default()
     };
 

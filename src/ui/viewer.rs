@@ -19,6 +19,11 @@ pub struct ViewerApp {
     selected_interval: u64,
     // Controle de fontes
     fonts_configured: bool,
+    // Cache para melhorar performance
+    cached_date: Option<NaiveDate>,
+    last_load_time: Option<std::time::Instant>,
+    // Campo de texto para data
+    date_input: String,
 }
 
 impl ViewerApp {
@@ -42,6 +47,9 @@ impl ViewerApp {
             selected_interval: config.daemon_interval_minutes,
             config,
             fonts_configured: false,
+            cached_date: None,
+            last_load_time: None,
+            date_input: selected_date.format("%Y-%m-%d").to_string(),
         };
 
         app.load_activities()?;
@@ -49,10 +57,26 @@ impl ViewerApp {
     }
 
     fn load_activities(&mut self) -> Result<()> {
+        // Verificar cache - só recarregar se necessário
+        let now = std::time::Instant::now();
+        let should_reload = match (self.cached_date, self.last_load_time) {
+            (Some(cached_date), Some(last_load)) => {
+                // Recarregar se mudou a data ou passou mais de 5 segundos
+                cached_date != self.selected_date || now.duration_since(last_load).as_secs() > 5
+            }
+            _ => true, // Primeira carga
+        };
+
+        if !should_reload {
+            return Ok(());
+        }
+
         match self.db.get_activities_for_date(self.selected_date) {
             Ok(activities) => {
                 self.activities = activities;
                 self.message = None;
+                self.cached_date = Some(self.selected_date);
+                self.last_load_time = Some(now);
             }
             Err(e) => {
                 self.message = Some(format!("Erro ao carregar atividades: {e}"));
@@ -89,11 +113,9 @@ impl eframe::App for ViewerApp {
         // Configurar fontes na primeira execução
         if !self.fonts_configured {
             fonts::setup_fonts(ctx);
+            theme::apply_theme(ctx, self.current_theme);
             self.fonts_configured = true;
         }
-
-        // Aplicar tema
-        theme::apply_theme(ctx, self.current_theme);
 
         CentralPanel::default().show(ctx, |ui| {
             // Barra de navegação
@@ -174,18 +196,30 @@ impl ViewerApp {
             ui.horizontal(|ui| {
                 ui.label("Data:");
 
-                let mut date_string = self.selected_date.format("%Y-%m-%d").to_string();
-                if ui.text_edit_singleline(&mut date_string).changed() {
-                    if let Ok(new_date) = NaiveDate::parse_from_str(&date_string, "%Y-%m-%d") {
-                        self.selected_date = new_date;
-                        if let Err(e) = self.load_activities() {
-                            self.message = Some(format!("Erro ao carregar atividades: {e}"));
+                let response = ui.add(
+                    egui::TextEdit::singleline(&mut self.date_input)
+                        .hint_text("YYYY-MM-DD")
+                        .desired_width(100.0)
+                );
+
+                // Processar mudança quando perde foco OU quando pressiona Enter
+                if response.lost_focus() || (response.changed() && ui.input(|i| i.key_pressed(egui::Key::Enter))) {
+                    if let Ok(new_date) = NaiveDate::parse_from_str(&self.date_input, "%Y-%m-%d") {
+                        if new_date != self.selected_date {
+                            self.selected_date = new_date;
+                            if let Err(e) = self.load_activities() {
+                                self.message = Some(format!("Erro ao carregar atividades: {e}"));
+                            }
                         }
+                    } else if !self.date_input.is_empty() && self.date_input.len() >= 8 {
+                        // Mostrar erro se formato inválido
+                        self.message = Some("❌ Formato de data inválido. Use YYYY-MM-DD".to_string());
                     }
                 }
 
                 if ui.button("Hoje").clicked() {
                     self.selected_date = Local::now().date_naive();
+                    self.date_input = self.selected_date.format("%Y-%m-%d").to_string();
                     if let Err(e) = self.load_activities() {
                         self.message = Some(format!("Erro ao carregar atividades: {e}"));
                     }
@@ -193,6 +227,7 @@ impl ViewerApp {
 
                 if ui.button("Ontem").clicked() {
                     self.selected_date = Local::now().date_naive() - chrono::Duration::days(1);
+                    self.date_input = self.selected_date.format("%Y-%m-%d").to_string();
                     if let Err(e) = self.load_activities() {
                         self.message = Some(format!("Erro ao carregar atividades: {e}"));
                     }

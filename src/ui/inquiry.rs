@@ -102,6 +102,9 @@ impl eframe::App for InquiryApp {
             self.fonts_configured = true;
         }
 
+        // Solicitar repaint menos frequente para melhorar responsividade
+        ctx.request_repaint_after(std::time::Duration::from_millis(200));
+
         CentralPanel::default().show(ctx, |ui| {
             ui.vertical_centered(|ui| {
                 ui.add_space(50.0);
